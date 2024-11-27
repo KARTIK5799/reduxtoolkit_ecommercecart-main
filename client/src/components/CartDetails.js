@@ -3,7 +3,7 @@ import "./cartstyle.css"
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart,removeToCart ,removeSingleIteams,emptycartIteam} from '../redux/features/cartSlice';
 import toast from 'react-hot-toast';
-
+import {loadStripe} from '@stripe/stripe-js'
 
 const CartDetails = () => {
 
@@ -63,6 +63,36 @@ const CartDetails = () => {
     useEffect(()=>{
         countquantity()
     },[countquantity])
+
+
+    //Payment Integration
+const makePayment=async()=>{
+    const stripe=await loadStripe("pk_test_51QPcxCCFlYcKHo0wOYXLRFh4z7RRGz8qxZDX79Jp4kx2g4NG7QBgoKBT6dCB9lzD78PHiLh8jkzsxQ0NL2bAEtMy00Jaa2E0Bo")
+const body={
+    products:carts
+};
+const headers = {
+    "Content-Type":"application/json"
+}
+const response = await fetch ("http://localhost:7000/api/create-checkout-session",{
+    method:"POST",
+    headers:headers,
+    body:JSON.stringify(body)
+})
+
+const session =await response.json()
+
+const result =stripe.redirectToCheckout({
+    sessionId:session.id
+})
+
+if(result.error){
+    console.log(result.error)
+}
+
+}
+
+
     return (
         <>
             <div className='row justify-content-center m-0'>
@@ -142,9 +172,10 @@ const CartDetails = () => {
                                         <tfoot>
                                             <tr>
                                                 <th>&nbsp;</th>
-                                                <th colSpan={3}>&nbsp;</th>
+                                                <th colSpan={2}>&nbsp;</th>
                                                 <th>Items In Cart <span className='ml-2 mr-2'>:</span><span className='text-danger'>{totalquantity}</span></th>
                                                 <th className='text-right'>Total Price<span className='ml-2 mr-2'>:</span><span className='text-danger'>₹ {totalprice}</span></th>
+                                                <th className='text-right'><button className='btn btn-success' onClick={(makePayment)} type='button'>Checkout!</button></th>
                                             </tr>
                                         </tfoot>
                                     </table>
